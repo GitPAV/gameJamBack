@@ -1,10 +1,10 @@
-const express = require("express")
-const jwt = require("jsonwebtoken")
+const express = require("express");
+const jwt = require("jsonwebtoken");
 
-const router = express.Router()
+const router = express.Router();
 
 const connexion = require('../conf');
-const jwtSecret = require("../jwtSecret")
+const jwtSecret = require("../jwtSecret");
 
 // Body parser module
 
@@ -54,15 +54,14 @@ router.post("/create-profile", (req, res) => {
         res.status(409, 'L\'email existe déja dans la base de donnée')
       } 
       else {
-        console.log(results)
         connexion.query('INSERT INTO User SET ?', [userData], (err, results) => {
           if (err) {
             console.log(err);
-            console.log(userData)
             res.status(500).send("Erreur lors de la creation de l'utilisateur");
           }
           else {
-            res.status(200, 'Utilisateur ajouté à la base de donnée')
+            console.log(results)
+            res.sendStatus(200)
           } 
         });
       } 
@@ -75,22 +74,17 @@ router.post("/create-profile", (req, res) => {
 
 router.post("/login", (req, res) => {
     const userData = req.body
-    const userEmail = req.body.email 
+    const userPseudo = req.body.pseudo
     const userPw = req.body.password
     console.log(userData)
   
-<<<<<<< HEAD
-    connexion.query(`SELECT email FROM User WHERE EXISTS (SELECT email FROM User WHERE email = '${userEmail}')`, (err, results) => {
-=======
-    connexion.query(`SELECT email FROM User WHERE EXISTS (SELECT email FROM users WHERE email = '${userEmail}'`, (err, results) => {
-      
->>>>>>> 4d6e0a2e251c1c7bb8067ed9478504a9331aaa14
-      if (err) {
-        console.error(err)
+    connexion.query(`SELECT pseudo FROM User WHERE pseudo = '${userPseudo}'`, (err, results) => {
+
+      if (results.length === 0) {
         res.status(401).send("Vous n'avez pas de compte")
       } else {
-        connexion.query(`SELECT password FROM User WHERE email = '${userEmail}' AND password = '${userPw}'`, (err, results) => {
-          if(err) {
+        connexion.query(`SELECT password FROM User WHERE pseudo = '${userPseudo}' AND password = '${userPw}'`, (err, results) => {
+          if(results.length === 0) {
             console.error(err)
             res.status(401).send("Mauvais mot de passe")
           } else {
@@ -121,7 +115,7 @@ router.post("/login", (req, res) => {
     jwt.verify(token, jwtSecret, (err, decoded) => {
       if(err) {
         console.log(err)
-        return res.status(200).send({mess: "Tu n'as pas accès aux données"})
+        return res.status(401).send({mess: "Tu n'as pas accès aux données"})
       }
       console.log('decode',decoded)
       return res.status(200).send({mess: 'Données du user', objectTests })
