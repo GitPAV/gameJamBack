@@ -1,10 +1,10 @@
-const express = require("express")
-const jwt = require("jsonwebtoken")
+const express = require("express");
+const jwt = require("jsonwebtoken");
 
-const router = express.Router()
+const router = express.Router();
 
 const connexion = require('../conf');
-const jwtSecret = require("../jwtSecret")
+const jwtSecret = require("../jwtSecret");
 
 // Body parser module
 
