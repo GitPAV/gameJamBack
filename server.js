@@ -1,4 +1,3 @@
-
 const express = require("express")
 const bodyParser = require("body-parser")
 const morgan = require("morgan")
@@ -22,6 +21,7 @@ app.use(cors());
 // routes : 
 
 app.use("/users", routes.users)
+app.use("/soldier", routes.soldier)
 
 
 // end of routes
