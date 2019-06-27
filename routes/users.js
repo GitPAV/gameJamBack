@@ -50,6 +50,7 @@ router.post("/create-profile", (req, res) => {
         console.log(err);
         res.status(500).send("Erreur lors de la vérification de l'email");
       } else if (results.length > 0) {
+        console.log("froggy is so high")
         res.status(409, 'L\'email existe déja dans la base de donnée')
       } 
       else {
@@ -57,10 +58,11 @@ router.post("/create-profile", (req, res) => {
         connexion.query('INSERT INTO User SET ?', [userData], (err, results) => {
           if (err) {
             console.log(err);
+            console.log(userData)
             res.status(500).send("Erreur lors de la creation de l'utilisateur");
           }
           else {
-            res.status(200, 'Utilisateur ajouté a la base de donnée')
+            res.status(200, 'Utilisateur ajouté à la base de donnée')
           } 
         });
       } 
@@ -77,7 +79,12 @@ router.post("/login", (req, res) => {
     const userPw = req.body.password
     console.log(userData)
   
+<<<<<<< HEAD
     connexion.query(`SELECT email FROM User WHERE EXISTS (SELECT email FROM User WHERE email = '${userEmail}')`, (err, results) => {
+=======
+    connexion.query(`SELECT email FROM User WHERE EXISTS (SELECT email FROM users WHERE email = '${userEmail}'`, (err, results) => {
+      
+>>>>>>> 4d6e0a2e251c1c7bb8067ed9478504a9331aaa14
       if (err) {
         console.error(err)
         res.status(401).send("Vous n'avez pas de compte")
