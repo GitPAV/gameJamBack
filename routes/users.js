@@ -11,7 +11,7 @@ const jwtSecret = require("../jwtSecret")
 const bodyParser = require('body-parser');
 // Support JSON-encoded bodies
 router.use(bodyParser.urlencoded({
-  extended: true
+  extended: false
 }));
 
 router.use(bodyParser.json());
@@ -94,6 +94,7 @@ router.post("/login", (req, res) => {
                 token
               })
             })
+            console.log('token = ' + token);
             res.header("Access-Control-Expose-Headers", "x-access-token")
             res.set("x-access-token", token)
             res.status(200)
@@ -115,7 +116,7 @@ router.post("/login", (req, res) => {
     jwt.verify(token, jwtSecret, (err, decoded) => {
       if(err) {
         console.log(err)
-        return res.status(401).send({mess: "Tu n'as pas accès aux données"})
+        return res.sendStatus(401)
       }
       console.log('decode',decoded)
       return res.status(200).send({mess: 'Données du user', objectTests })
