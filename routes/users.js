@@ -23,6 +23,8 @@ const verifToken = req => {
       req.headers.authorization &&
       req.headers.authorization.split(" ")[0] === "Bearer"
     ) {
+      console.log(req.headers.authorization)
+      console.log('log in function : ' +req.headers.authorization.split(" ")[1])
       return req.headers.authorization.split(" ")[1]
     } else if (req.query && req.query.token) {
       return req.query.token;
@@ -89,15 +91,11 @@ router.post("/login", (req, res) => {
             res.status(401).send("Mauvais mot de passe")
           } else {
             console.log("T'existes bravo")
-            const token = jwt.sign(userData, jwtSecret, (err, token) => {
-              res.json({
-                token
-              })
-            })
+            const token = jwt.sign(userData, jwtSecret)
             console.log('token = ' + token);
             res.header("Access-Control-Expose-Headers", "x-access-token")
             res.set("x-access-token", token)
-            res.status(200)
+            res.status(200).send({ auth: true, token: token });
           }
         })
       }
@@ -110,10 +108,13 @@ router.post("/login", (req, res) => {
 
   router.post("/protected", (req, res, next) => {
     const token = verifToken(req);
+    console.log('Seboubou : ' + req)
     const objectTests = { //data appelées par la bdd 
       test: 'ok',
     }
+    console.log('toctoctoken : ' + token)
     jwt.verify(token, jwtSecret, (err, decoded) => {
+      console.log(token)
       if(err) {
         console.log(err)
         return res.sendStatus(401)
