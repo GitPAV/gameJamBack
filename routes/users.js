@@ -1,17 +1,17 @@
-const express = require("express")
-const jwt = require("jsonwebtoken")
+const express = require("express");
+const jwt = require("jsonwebtoken");
 
-const router = express.Router()
+const router = express.Router();
 
 const connexion = require('../conf');
-const jwtSecret = require("../jwtSecret")
+const jwtSecret = require("../jwtSecret");
 
 // Body parser module
 
 const bodyParser = require('body-parser');
 // Support JSON-encoded bodies
 router.use(bodyParser.urlencoded({
-  extended: true
+  extended: false
 }));
 
 router.use(bodyParser.json());
@@ -23,6 +23,8 @@ const verifToken = req => {
       req.headers.authorization &&
       req.headers.authorization.split(" ")[0] === "Bearer"
     ) {
+      console.log(req.headers.authorization)
+      console.log('log in function : ' +req.headers.authorization.split(" ")[1])
       return req.headers.authorization.split(" ")[1]
     } else if (req.query && req.query.token) {
       return req.query.token;
@@ -37,6 +39,20 @@ const verifToken = req => {
 // *******************************************
 // Post into UsersDB, creating new user
 // *******************************************
+
+router.get('/get-user', (req, res) => {
+
+  connexion.query(`SELECT * FROM UserBase`, (err, results) => {
+      if (err) {
+          console.log(err)
+          res.status(500)
+      } else {
+          console.log(results[0].userMoney)
+          res.status(200).json(results)
+      }
+  })
+})
+
 
 router.post("/create-profile", (req, res) => {
 
@@ -54,20 +70,36 @@ router.post("/create-profile", (req, res) => {
         res.status(409, 'L\'email existe déja dans la base de donnée')
       } 
       else {
-        console.log(results)
         connexion.query('INSERT INTO User SET ?', [userData], (err, results) => {
           if (err) {
             console.log(err);
-            console.log(userData)
             res.status(500).send("Erreur lors de la creation de l'utilisateur");
           }
           else {
-            res.status(200, 'Utilisateur ajouté à la base de donnée')
+            console.log(results)
+            res.sendStatus(200)
           } 
         });
       } 
     });
   });
+
+  router.put('/update-user', (req, res) => {
+    const userId = req.body.id 
+    const userMoney = req.body.userMoney
+
+  connexion.query(`UPDATE UserBase SET userMoney = ${userMoney} WHERE id= ${userId}`, (err, results) => {
+
+    if (err) {
+
+      console.log(err);
+      res.status(500).send("Erreur lors de la modification de données");
+    } else {
+      console.log(results);
+      res.sendStatus(200);
+    }
+});
+  })
 
 // **********************************************************
 // Login standard pour tous les users qui ont déjà un profil
@@ -75,29 +107,26 @@ router.post("/create-profile", (req, res) => {
 
 router.post("/login", (req, res) => {
     const userData = req.body
-    const userEmail = req.body.email 
+    const userPseudo = req.body.pseudo
     const userPw = req.body.password
     console.log(userData)
   
-    connexion.query(`SELECT email FROM User WHERE EXISTS (SELECT email FROM User WHERE email = '${userEmail}')`, (err, results) => {
-      if (err) {
-        console.error(err)
+    connexion.query(`SELECT pseudo FROM User WHERE pseudo = '${userPseudo}'`, (err, results) => {
+
+      if (results.length === 0) {
         res.status(401).send("Vous n'avez pas de compte")
       } else {
-        connexion.query(`SELECT password FROM User WHERE email = '${userEmail}' AND password = '${userPw}'`, (err, results) => {
-          if(err) {
+        connexion.query(`SELECT password FROM User WHERE pseudo = '${userPseudo}' AND password = '${userPw}'`, (err, results) => {
+          if(results.length === 0) {
             console.error(err)
             res.status(401).send("Mauvais mot de passe")
           } else {
             console.log("T'existes bravo")
-            const token = jwt.sign(userData, jwtSecret, (err, token) => {
-              res.json({
-                token
-              })
-            })
+            const token = jwt.sign(userData, jwtSecret)
+            console.log('token = ' + token);
             res.header("Access-Control-Expose-Headers", "x-access-token")
             res.set("x-access-token", token)
-            res.status(200)
+            res.status(200).send({ auth: true, token: token });
           }
         })
       }
@@ -110,13 +139,16 @@ router.post("/login", (req, res) => {
 
   router.post("/protected", (req, res, next) => {
     const token = verifToken(req);
+    console.log('Seboubou : ' + req)
     const objectTests = { //data appelées par la bdd 
       test: 'ok',
     }
+    console.log('toctoctoken : ' + token)
     jwt.verify(token, jwtSecret, (err, decoded) => {
+      console.log(token)
       if(err) {
         console.log(err)
-        return res.status(200).send({mess: "Tu n'as pas accès aux données"})
+        return res.sendStatus(401)
       }
       console.log('decode',decoded)
       return res.status(200).send({mess: 'Données du user', objectTests })
