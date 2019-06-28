@@ -69,43 +69,98 @@ router.post("/create-profile", (req, res) => {
 
     const userData = req.body;
     const userMail = req.body.email;  
+    const emailCheck = `SELECT email FROM User WHERE email = '${userMail}'`;
+    const setBase = 'UPDATE UserBase SET inhabited=1 WHERE (SELECT id=(FLOOR(RAND()*100)) WHERE inhabited=0)';
+    const getNewBase = 'SELECT id AS base_id FROM UserBase JOIN User ON User.id = base_id WHERE inhabited = 1 AND base_id IS NULL';
 
-    connexion.query(`SELECT email FROM User WHERE email = '${userMail}'`, (err, results) => {
+  connexion.beginTransaction( (err) => {
+    if (err) { throw err } 
+    
+    connexion.query(emailCheck, (err, results) => {
       if (err) {
-  
-        console.log(err);
-        res.status(500).send("Erreur lors de la vérification de l'email");
+        return connexion.rollback(_ => {
+          res
+            .status(500)
+            .send("error while checking email")
+          throw err
+        })
       } else if (results.length > 0) {
-        console.log("froggy is so high")
-        res.status(409, 'L\'email existe déja dans la base de donnée')
-      } 
-      else {
-
-        connexion.query('UPDATE UserBase SET inhabited=1 WHERE (SELECT id=(FLOOR(RAND()*100)) WHERE inhabited=0) ', (err, results) => {
+        console.log('utilisateur déjà dans la BDD')
+      } else {
+        connexion.query(setBase, (err, results) => {
           if (err) {
-            console.log(err);
-            res.status(500).send("Erreur lors de la creation de l'utilisateur");
+            return connection.rollback(_ => {
+              res
+                .status(500)
+                .send("erreur lors de l'occupation d'une base")
+              throw err
+            })
+          } else {
+            // récupérer Id ont le booléen vient d'être mis à 1
           }
-          else {
-            console.log(results)
-            res.sendStatus(200)
-          } 
-        });
+        })
 
+      }
+    })        
+    connection.query('INSERT INTO cinema SET ?', formDataCinema, (err, results) => {
+      if (err) {
+        return connection.rollback(_ => {
+          res
+            .status(500)
+            .send(" erreur lors de l'insertion cinema")
+          throw err
+        })
+      } else {
+        joinObject.cinema_idCinema = results.insertId       
 
-        connexion.query('INSERT INTO User SET ?', [userData], (err, results) => {
-          if (err) {
-            console.log(err);
-            res.status(500).send("Erreur lors de la creation de l'utilisateur");
-          }
-          else {
-            console.log(results)
-            res.sendStatus(200)
-          } 
-        });
-      } 
-    });
-  });
+        connection.query('SELECT * FROM realisateurs', formDataReal, (err, results) => {
+          const real = results.filter(result => result.name == formDataReal.name)                    
+          if (real.length !== 0) {
+            joinObject.realisateurs_idRealisateur = real.idRealisateur
+          } else {
+            connection.query('INSERT INTO realisateurs SET ?', formDataReal, (err, results) => {
+              if (err) {
+                return connection.rollback(_ => {
+                  res
+                    .status(500)
+                    .send(" error insert realisateur")
+                  throw err
+                })
+              }
+            })
+          } connection.query('SELECT * FROM distributeurEditeur', formDataEdit, (err, results) => {
+            const edit = results.filter(result => result.name == formDataEdit.name)                                
+            if (edit.length !== 0) {
+              joinObject.distributeurEditeur_idDistributeurEditeur = edit.distributeurEditeur
+            } else {
+              connection.query('INSERT INTO distributeurEditeur SET ?', formDataEdit, (err, results) => {
+                if (err) {
+                  return connection.rollback(_ => {
+                    res
+                      .status(500)
+                      .send(" error insert distributeur")
+                    throw err
+                  })
+                }
+              })
+            }
+          })                  
+            connection.commit((err) => {
+            if (err) {
+              return connection.rollback(_ => {
+                res
+                  .status(500)
+                  .send(" error end rollback")
+                throw err
+              })
+            }
+          })
+          res.status(200).json({ results: "send" })
+        })
+      }
+    })
+  })
+})
 
   router.put('/update-user', (req, res) => {
     const userId = req.body.id 
