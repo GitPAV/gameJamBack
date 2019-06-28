@@ -48,7 +48,6 @@ router.get('/get-user', (req, res) => {
           console.log(err)
           res.status(500)
       } else {
-          console.log(results[0].userMoney)
           res.status(200).json(results)
       }
   })
