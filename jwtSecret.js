@@ -1,1 +1,1 @@
-module.exports = "spirit of manga's secret"; // ne pas push ce fichier
+module.exports = "gamjam secret super secret"; // ne pas push ce fichier
