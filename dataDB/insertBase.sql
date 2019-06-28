@@ -1,10 +1,10 @@
 delimiter //
 
-CREATE PROCEDURE doitnow()
+CREATE PROCEDURE basecreation()
 BEGIN
   DECLARE i INT unsigned DEFAULT 0;
   WHILE i < 100 DO
-    INSERT INTO `Map` (`inhabited`) VALUES (0);
+    INSERT INTO `UserBase` (`inhabited`) VALUES (0);
     SET i = i + 1;
   END WHILE;
 END;

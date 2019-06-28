@@ -59,8 +59,6 @@ router.get('/get-user-infos', (req, res) => {
           console.log(err)
           res.status(500)
       } else {
-        console.log(pseudoNodeUser)
-          console.log(results)
           res.status(200).json(results)
       }
   })
@@ -70,9 +68,8 @@ router.get('/get-user-infos', (req, res) => {
 router.post("/create-profile", (req, res) => {
 
     const userData = req.body;
-    const userMail = req.body.email
-    console.log('userMail', userData.email)
-  
+    const userMail = req.body.email;  
+
     connexion.query(`SELECT email FROM User WHERE email = '${userMail}'`, (err, results) => {
       if (err) {
   
@@ -83,6 +80,19 @@ router.post("/create-profile", (req, res) => {
         res.status(409, 'L\'email existe déja dans la base de donnée')
       } 
       else {
+
+        connexion.query('UPDATE UserBase SET inhabited=1 WHERE (SELECT id=(FLOOR(RAND()*100)) WHERE inhabited=0) ', (err, results) => {
+          if (err) {
+            console.log(err);
+            res.status(500).send("Erreur lors de la creation de l'utilisateur");
+          }
+          else {
+            console.log(results)
+            res.sendStatus(200)
+          } 
+        });
+
+
         connexion.query('INSERT INTO User SET ?', [userData], (err, results) => {
           if (err) {
             console.log(err);
@@ -140,7 +150,7 @@ router.post("/login", (req, res) => {
             console.log('token = ' + token);
             res.header("Access-Control-Expose-Headers", "x-access-token")
             res.set("x-access-token", token)
-            res.status(200).send({ auth: true, token: token });
+            res.status(200).send({ auth: true, token: token});
           }
         })
       }
@@ -163,7 +173,6 @@ router.post("/login", (req, res) => {
         return res.sendStatus(401)
       }
       console.log('decode',decoded)
-      pseudoNodeUser = decoded.pseudo;
       return res.status(200).send({mess: 'Données du user', objectTests })
     })
   })
