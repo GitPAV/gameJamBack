@@ -79,12 +79,7 @@ router.post("/login", (req, res) => {
     const userPw = req.body.password
     console.log(userData)
   
-<<<<<<< HEAD
     connexion.query(`SELECT email FROM User WHERE EXISTS (SELECT email FROM User WHERE email = '${userEmail}')`, (err, results) => {
-=======
-    connexion.query(`SELECT email FROM User WHERE EXISTS (SELECT email FROM users WHERE email = '${userEmail}'`, (err, results) => {
-      
->>>>>>> 4d6e0a2e251c1c7bb8067ed9478504a9331aaa14
       if (err) {
         console.error(err)
         res.status(401).send("Vous n'avez pas de compte")
