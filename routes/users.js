@@ -40,6 +40,20 @@ const verifToken = req => {
 // Post into UsersDB, creating new user
 // *******************************************
 
+router.get('/get-user', (req, res) => {
+
+  connexion.query(`SELECT * FROM UserBase`, (err, results) => {
+      if (err) {
+          console.log(err)
+          res.status(500)
+      } else {
+          console.log(results[0].userMoney)
+          res.status(200).json(results)
+      }
+  })
+})
+
+
 router.post("/create-profile", (req, res) => {
 
     const userData = req.body;
@@ -69,6 +83,23 @@ router.post("/create-profile", (req, res) => {
       } 
     });
   });
+
+  router.put('/update-user', (req, res) => {
+    const userId = req.body.id 
+    const userMoney = req.body.userMoney
+
+  connexion.query(`UPDATE UserBase SET userMoney = ${userMoney} WHERE id= ${userId}`, (err, results) => {
+
+    if (err) {
+
+      console.log(err);
+      res.status(500).send("Erreur lors de la modification de données");
+    } else {
+      console.log(results);
+      res.sendStatus(200);
+    }
+});
+  })
 
 // **********************************************************
 // Login standard pour tous les users qui ont déjà un profil
