@@ -5,6 +5,7 @@ const router = express.Router();
 
 const connexion = require('../conf');
 const jwtSecret = require("../jwtSecret");
+let pseudoNodeUser = '';
 
 // Body parser module
 
@@ -48,6 +49,19 @@ router.get('/get-user', (req, res) => {
           res.status(500)
       } else {
           console.log(results[0].userMoney)
+          res.status(200).json(results)
+      }
+  })
+})
+
+router.get('/get-user-infos', (req, res) => {
+  connexion.query(`SELECT * FROM User WHERE pseudo = '${pseudoNodeUser}'`, (err, results) => {
+      if (err) {
+          console.log(err)
+          res.status(500)
+      } else {
+        console.log(pseudoNodeUser)
+          console.log(results)
           res.status(200).json(results)
       }
   })
@@ -108,6 +122,7 @@ router.post("/create-profile", (req, res) => {
 router.post("/login", (req, res) => {
     const userData = req.body
     const userPseudo = req.body.pseudo
+    pseudoNodeUser = userPseudo;
     const userPw = req.body.password
     console.log(userData)
   
@@ -139,11 +154,9 @@ router.post("/login", (req, res) => {
 
   router.post("/protected", (req, res, next) => {
     const token = verifToken(req);
-    console.log('Seboubou : ' + req)
     const objectTests = { //data appelées par la bdd 
       test: 'ok',
     }
-    console.log('toctoctoken : ' + token)
     jwt.verify(token, jwtSecret, (err, decoded) => {
       console.log(token)
       if(err) {
@@ -151,6 +164,7 @@ router.post("/login", (req, res) => {
         return res.sendStatus(401)
       }
       console.log('decode',decoded)
+      pseudoNodeUser = decoded.pseudo;
       return res.status(200).send({mess: 'Données du user', objectTests })
     })
   })
